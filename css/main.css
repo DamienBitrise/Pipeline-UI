@@ -109,11 +109,35 @@ label {
 }
 
 .kanban-item{
+    padding: 12px;
+    margin-bottom: 12px;
+    white-space: nowrap;
     border-color: rgb(204, 204, 204);
     border-radius: 8px;
     border-style: solid;
     background-color: #f8f8f8;
     color: rgb(53, 29, 72);
+}
+
+.kanban-item > div{
+    display: inline-block;
+}
+
+.kanban-item > div:nth-child(2){
+    width: 120px;
+}
+
+.workflow-title{
+    width: 100px;
+    font-size: 14px;
+    overflow:hidden;
+    word-break:break-all;
+    white-space:normal;
+    display: inline-block;
+}
+
+.workflow-delete{
+    display: inline-block;
 }
 
 .kanban-board {

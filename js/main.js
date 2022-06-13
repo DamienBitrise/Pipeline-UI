@@ -102,7 +102,7 @@ function removeAllBoards(){
 
 function loadYaml(yamlObj){
     let pipeline_keys = Object.keys(yamlObj.pipelines);
-    if(!selectedPipeline){
+    if(!selectedPipeline || pipeline_keys.indexOf(selectedPipeline) == -1){
       selectedPipeline = pipeline_keys[0];
     }
     let stage_keys = Object.keys(yamlObj.stages);
@@ -126,7 +126,7 @@ function loadYaml(yamlObj){
             pipeline_stage_workflows_keys.forEach((workflow)=>{
                 board_stages.push({
                     id: workflow,
-                    title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
+                    title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')"></div>',
                     drag: function(el, source) {
                         console.log("START DRAG: " + el.dataset.eid);
                     },
@@ -183,7 +183,7 @@ function addWorkflow(boardId, selectHTML){
     var workflow = e.target[0].value;
     KanbanTest.addElement(boardId, {
       id: workflow,
-      title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
+      title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')"></div>',
     });
     formItem.parentNode.removeChild(formItem);
     updateYamlFromBoard();
