@@ -92,7 +92,7 @@ function loadYaml(yamlObj){
             boards.push({
                 id: stage,
                 title: stage + '<input id="delete_'+stage+'" class="delete" type="button" value="X" onclick="deleteStage(\''+stage+'\')">',
-                class: "info,good",
+                class: "white",
                 dragTo: stage_keys,
                 item: board_stages
             }); 
@@ -178,7 +178,7 @@ function createBoard(boards, yamlObj){
     },
     itemAddOptions: {
       enabled: true,
-      content: '+ Add Workflow',
+      content: '+',
       class: 'custom-button',
       footer: true
     }, 
@@ -191,20 +191,24 @@ function createBoard(boards, yamlObj){
   var addBoardDefault = document.getElementById("addStage");
   addBoardDefault.addEventListener("click", function() {
     let name = document.getElementById('stage_name').value;
-    KanbanTest.addBoards([
-      {
-        id: name,
-        title: name + '<input id="delete_'+name+'" class="delete" type="button" value="X" onclick="deleteStage(\''+name+'\')">',
-        item: [],
-        class: "info,good"
-      }
-    ]);
-    let boardObj = window.renderJSON();
-    KanbanTest.options.boards.forEach((board)=>{
-        board.dragTo = boardObj.map((board)=>board.id)
-    });
+    if(name == ''){
+      alert('Error: You must enter a stage name!');
+    } else {
+      KanbanTest.addBoards([
+        {
+          id: name,
+          title: name + '<input id="delete_'+name+'" class="delete" type="button" value="X" onclick="deleteStage(\''+name+'\')">',
+          item: [],
+          class: "white"
+        }
+      ]);
+      let boardObj = window.renderJSON();
+      KanbanTest.options.boards.forEach((board)=>{
+          board.dragTo = boardObj.map((board)=>board.id)
+      });
 
-    window.updateYamlFromBoard();
+      window.updateYamlFromBoard();
+    }
   });
 }
 
