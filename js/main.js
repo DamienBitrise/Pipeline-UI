@@ -113,25 +113,36 @@ function deleteWorkflow(workflow){
   window.updateYamlFromBoard();
 }
 
-function addWorkflow(workflowId){
-    KanbanTest.options.boards.forEach((board)=>{
-        if(board.id == workflowId){
-            board.item.push({
-              id: workflowId,
-              title: workflowId + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
-            });
-        }
+function addWorkflow(boardId, selectHTML){
+  // create a form to enter element
+  var formItem = document.createElement("form");
+  formItem.setAttribute("class", "itemform");
+  formItem.innerHTML =
+    `<div class="form-group">
+        ${selectHTML}
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary btn-xs pull-right">Add</button>
+        <button type="button" id="CancelBtn" class="btn btn-default btn-xs pull-right">Cancel</button>
+    </div>`;
+
+  KanbanTest.addForm(boardId, formItem);
+  formItem.addEventListener("submit", function(e) {
+    e.preventDefault();
+    var workflow = e.target[0].value;
+    KanbanTest.addElement(boardId, {
+      id: workflow,
+      title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
     });
+    formItem.parentNode.removeChild(formItem);
+    window.updateYamlFromBoard();
+  });
+  document.getElementById("CancelBtn").onclick = function() {
+    formItem.parentNode.removeChild(formItem);
+  };
 }
 
 function createBoard(boards, yamlObj){
-    let workflow_keys = Object.keys(yamlObj.workflows);
-    let selectHTML = '<select>';
-    workflow_keys.forEach((workflow)=>{
-        selectHTML += '<option value="'+workflow+'">'+workflow+'</option>';
-    });
-    selectHTML += '</select>';
-
     KanbanTest = new jKanban({
     element: "#myKanban",
     gutter: "10px",
@@ -156,35 +167,14 @@ function createBoard(boards, yamlObj){
         window.updateYamlFromBoard();
       },
     buttonClick: function(el, boardId) {
-      console.log(el);
-      console.log(boardId);
-      // create a form to enter element
-      var formItem = document.createElement("form");
-      formItem.setAttribute("class", "itemform");
-      formItem.innerHTML =
-        `<div class="form-group">
-            ${selectHTML}
-        </div>
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary btn-xs pull-right">Add</button>
-            <button type="button" id="CancelBtn" class="btn btn-default btn-xs pull-right">Cancel</button>
-        </div>`;
-
-      KanbanTest.addForm(boardId, formItem);
-      formItem.addEventListener("submit", function(e) {
-        e.preventDefault();
-        var workflow = e.target[0].value;
-        KanbanTest.addElement(boardId, {
-          id: workflow,
-          title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
-        });
-        formItem.parentNode.removeChild(formItem);
-        // addWorkflow(boardId);
-        window.updateYamlFromBoard();
+      // TODO Fix this so it is updated from the YAML list of workflows
+      let workflow_keys = Object.keys(yamlObj.workflows);
+      let selectHTML = '<select>';
+      workflow_keys.forEach((workflow)=>{
+          selectHTML += '<option value="'+workflow+'">'+workflow+'</option>';
       });
-      document.getElementById("CancelBtn").onclick = function() {
-        formItem.parentNode.removeChild(formItem);
-      };
+      selectHTML += '</select>';
+      addWorkflow(boardId, selectHTML);
     },
     itemAddOptions: {
       enabled: true,
