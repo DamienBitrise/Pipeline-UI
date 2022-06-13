@@ -26,8 +26,6 @@ window.onload = function () {
     let name = document.getElementById('stage_name').value;
     if(name == ''){
       alert('Error: You must enter a stage name!');
-    } else if(!isUniqueStageName(name)) {
-      alert('Error: You must enter a unique stage name!');
     } else {
       KanbanTest.addBoards([
         {
