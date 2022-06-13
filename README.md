@@ -7,11 +7,13 @@
 ## Features
 
 - Two way Sync between YAML and Visual Editor
+- 
 - UI
+  - Add Pipeline
   - Add/Remove Stages/Workflows
   - Drag/Drop Stages/Workflows
 - YAML
-  - Add/Remove/Edit Stages/Workflows
+  - Add/Remove/Edit Stages/Workflows/Pipelines
 
 ## Third Party Libs
 
