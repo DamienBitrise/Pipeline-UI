@@ -19,6 +19,29 @@ window.onload = function () {
     removeAllBoards();
     parse();
   });
+
+  var addStageElm = document.getElementById("addStage");
+  addStageElm.addEventListener("click", function() {
+    let name = document.getElementById('stage_name').value;
+    if(name == ''){
+      alert('Error: You must enter a stage name!');
+    } else {
+      KanbanTest.addBoards([
+        {
+          id: name,
+          title: name + '<input id="delete_'+name+'" class="delete" type="button" value="X" onclick="deleteStage(\''+name+'\')">',
+          item: [],
+          class: "white"
+        }
+      ]);
+      let boardObj = renderJSON();
+      KanbanTest.options.boards.forEach((board)=>{
+          board.dragTo = boardObj.map((board)=>board.id)
+      });
+
+      updateYamlFromBoard();
+    }
+  });
   
 
   window.renderJSON = ()=>{
@@ -215,29 +238,4 @@ function createBoard(boards, yamlObj){
     },
     boards: boards
   });
-
-  var addBoardDefault = document.getElementById("addStage");
-  addBoardDefault.addEventListener("click", function() {
-    let name = document.getElementById('stage_name').value;
-    if(name == ''){
-      alert('Error: You must enter a stage name!');
-    } else {
-      KanbanTest.addBoards([
-        {
-          id: name,
-          title: name + '<input id="delete_'+name+'" class="delete" type="button" value="X" onclick="deleteStage(\''+name+'\')">',
-          item: [],
-          class: "white"
-        }
-      ]);
-      let boardObj = renderJSON();
-      KanbanTest.options.boards.forEach((board)=>{
-          board.dragTo = boardObj.map((board)=>board.id)
-      });
-
-      updateYamlFromBoard();
-    }
-  });
 }
-
-
