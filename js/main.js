@@ -116,7 +116,10 @@ function deleteWorkflow(workflow){
 function addWorkflow(workflowId){
     KanbanTest.options.boards.forEach((board)=>{
         if(board.id == workflowId){
-            board.item.push({"id":text,"title":text});
+            board.item.push({
+              id: workflowId,
+              title: workflowId + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
+            });
         }
     });
 }
@@ -172,6 +175,7 @@ function createBoard(boards, yamlObj){
         e.preventDefault();
         var workflow = e.target[0].value;
         KanbanTest.addElement(boardId, {
+          id: workflow,
           title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
         });
         formItem.parentNode.removeChild(formItem);
