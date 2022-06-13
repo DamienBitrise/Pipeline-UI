@@ -1,5 +1,5 @@
 let KanbanTest = null;
-
+let selectedPipeline = null;
 window.onload = function () {
   default_text = document.getElementById('source').value || '';
 
@@ -8,10 +8,18 @@ window.onload = function () {
 
   var sourceElm = document.getElementById("source");
   sourceElm.addEventListener("input", function() {
-    let kanban = document.getElementById('myKanban');
-    kanban.innerHTML = '';
+    removeAllBoards();
     parse();
   });
+
+  var pipelinesElm = document.getElementById("pipelines");
+  pipelinesElm.addEventListener("change", function() {
+    updateYamlFromBoard();
+    selectedPipeline = this.value;
+    removeAllBoards();
+    parse();
+  });
+  
 
   window.renderJSON = ()=>{
     const obj = document.getElementById("myKanban");
@@ -36,7 +44,7 @@ window.onload = function () {
     let obj = jsYaml.load(str, { schema: jsYaml.DEFAULT_SCHEMA });
     let newPipelineStages = [];
     let newStageWorkflowsObjs = {};
-    let boards = window.renderJSON();
+    let boards = renderJSON();
     boards.forEach((board)=>{
       let newStageWorkflows = [];
       board.items.forEach((wf)=>{
@@ -52,21 +60,40 @@ window.onload = function () {
       };
     })
 
-    obj.pipelines.pipeline.stages = newPipelineStages;
-    obj.stages = newStageWorkflowsObjs;
+    obj.pipelines[selectedPipeline].stages = newPipelineStages;
+    obj.stages = {
+      ...obj.stages, 
+      ...newStageWorkflowsObjs
+    };
     let yaml = jsYaml.dump(obj);
     document.getElementById("source").value = yaml;
   }
 };
 
+function removeAllBoards(){
+  let boards = renderJSON();
+  boards.forEach((board)=>{
+    KanbanTest.removeBoard(board.id);
+  });
+}
+
 function loadYaml(yamlObj){
     let pipeline_keys = Object.keys(yamlObj.pipelines);
-    let pipelines = pipeline_keys.map((key)=>yamlObj.pipelines[key]);
+    if(!selectedPipeline){
+      selectedPipeline = pipeline_keys[0];
+    }
     let stage_keys = Object.keys(yamlObj.stages);
-    let workflow_keys = Object.keys(yamlObj.workflows);
+
+    let selectHTML = '';
+    pipeline_keys.forEach((pipeline)=>{
+        selectHTML += '<option value="'+pipeline+'" '+(pipeline == selectedPipeline ? 'selected' : '')+'>'+pipeline+'</option>';
+    });
+    document.getElementById('pipelines').innerHTML = selectHTML;
 
     let boards = [];
-    pipelines.forEach((pipeline)=>{
+    pipeline_keys.forEach((pipelineKey)=>{
+      let pipeline = yamlObj.pipelines[pipelineKey];
+      if(selectedPipeline == pipelineKey){
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
         pipeline_stage_keys.forEach((stage)=>{
             let stageObj = yamlObj.stages[stage];
@@ -85,7 +112,7 @@ function loadYaml(yamlObj){
                     },
                     drop: function(el) {
                         console.log("DROPPED: " + el.dataset.eid);
-                        window.updateYamlFromBoard();
+                        updateYamlFromBoard();
                     }
                 });
             });
@@ -97,6 +124,7 @@ function loadYaml(yamlObj){
                 item: board_stages
             }); 
         });
+      }
     })
     createBoard(boards, yamlObj);
 }
@@ -105,12 +133,12 @@ function loadYaml(yamlObj){
 
 function deleteStage(board){
     KanbanTest.removeBoard(board);
-    window.updateYamlFromBoard();
+    updateYamlFromBoard();
 }
 
 function deleteWorkflow(workflow){
   KanbanTest.removeElement(workflow);
-  window.updateYamlFromBoard();
+  updateYamlFromBoard();
 }
 
 function addWorkflow(boardId, selectHTML){
@@ -135,7 +163,7 @@ function addWorkflow(boardId, selectHTML){
       title: workflow + '<input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')">',
     });
     formItem.parentNode.removeChild(formItem);
-    window.updateYamlFromBoard();
+    updateYamlFromBoard();
   });
   document.getElementById("CancelBtn").onclick = function() {
     formItem.parentNode.removeChild(formItem);
@@ -159,12 +187,12 @@ function createBoard(boards, yamlObj){
     dropEl: function(el, target, source, sibling){
       console.log(target.parentElement.getAttribute('data-id'));
       console.log(el, target, source, sibling)
-      window.updateYamlFromBoard();
+      updateYamlFromBoard();
     },
     dropBoard: function(el, target, source, sibling){
         console.log(target.parentElement.getAttribute('data-id'));
         console.log(el, target, source, sibling)
-        window.updateYamlFromBoard();
+        updateYamlFromBoard();
       },
     buttonClick: function(el, boardId) {
       // TODO Fix this so it is updated from the YAML list of workflows
@@ -202,12 +230,12 @@ function createBoard(boards, yamlObj){
           class: "white"
         }
       ]);
-      let boardObj = window.renderJSON();
+      let boardObj = renderJSON();
       KanbanTest.options.boards.forEach((board)=>{
           board.dragTo = boardObj.map((board)=>board.id)
       });
 
-      window.updateYamlFromBoard();
+      updateYamlFromBoard();
     }
   });
 }

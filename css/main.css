@@ -10,6 +10,7 @@ body {
 
 .kanban-container {
     margin: 20px;
+    margin-top: 20px;
 }
 
 .success {
@@ -86,11 +87,25 @@ select{
     width: 100%;
 }
 
+.controls-container{
+    margin-top: 8px;
+    margin-left: 20px;
+}
 .controls{
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
     z-index: 1;
+}
+
+.top-controls{
+    white-space: nowrap;
+    z-index: 1;
+}
+
+select{
+    display:inline-block;
+    width: 150px;
+}
+label {
+    display: inline-block;
 }
 
 .kanban-item{

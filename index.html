@@ -15,25 +15,36 @@
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 project_type: ios
 pipelines:
-  pipeline:
+  pipeline_1:
     stages:
-      - stage_1: {}
-      - stage_2: {}
-      - stage_3: {}
+      - build: {}
+      - test: {}
+      - deploy: {}
+  pipeline_2:
+    stages:
+      - build: {}
+      - test: {}
+  pipeline_3:
+    stages:
+      - build_parallel: {}
 stages:
-  stage_1:
+  build:
     workflows:
       - build: {}
-  stage_2:
+  test:
     workflows:
       - tests_1: {}
       - tests_2: {}
       - tests_3: {}
       - tests_4: {}
       - tests_5: {}
-  stage_3:
+  deploy:
     workflows:
       - deploy: {}
+  build_parallel:
+    workflows:
+      - ios: {}
+      - android: {}
 workflows:
   build:
     steps:
@@ -70,13 +81,30 @@ workflows:
       - activate-ssh-key@4:
           run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
       - git-clone@6: {}
-</textarea>
+  ios:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  android:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  </textarea>
   </div>
-    <div class="controls">
-      <input type="text" id="stage_name">
-      <button id="addStage">Add Stage</button>
+    <div id="myKanban">
+      <div class="controls-container">
+        <span class="top-controls">
+          <label for="pipelines">Pipeline:</label>
+          <select id="pipelines" name="pipelines"></select>
+        </span>
+        <span class="controls">
+          <button id="addStage">Add Stage</button>
+          <input type="text" id="stage_name">
+        </span>
+      </div>
     </div>
-    <div id="myKanban"></div>
     <script src="./libs/jkanban/jkanban.js"></script>
     <script src="./libs/js-yaml/js-yaml.js"></script>
     <script src="./js/main.js"></script>
