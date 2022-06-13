@@ -6615,17 +6615,17 @@ var demo = (function () {
   var SEXY_SCHEMA = jsYaml.DEFAULT_SCHEMA.extend([ SexyYamlType ]);
 
   // Hack to make this global
-  window.parse = () => {
+  window.parseYaml = () => {
     var str, obj;
 
     str = document.getElementById('source').value;
 
     try {
       obj = jsYaml.load(str, { schema: jsYaml.DEFAULT_SCHEMA });
-      loadYaml(obj);
       console.log(inspect(obj, false, 10));
     } catch (err) {
       console.log(err);
     }
+    return obj;
   }
 }());

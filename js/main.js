@@ -4,12 +4,13 @@ window.onload = function () {
   default_text = document.getElementById('source').value || '';
 
   // Parse the YAML in the text editor
-  parse();
+  loadYaml(parseYaml());
 
   var sourceElm = document.getElementById("source");
   sourceElm.addEventListener("input", function() {
     removeAllBoards();
-    parse();
+    
+    loadYaml(parseYaml());
   });
 
   var pipelinesElm = document.getElementById("pipelines");
@@ -17,7 +18,7 @@ window.onload = function () {
     updateYamlFromBoard();
     selectedPipeline = this.value;
     removeAllBoards();
-    parse();
+    loadYaml(parseYaml());
   });
 
   var addStageElm = document.getElementById("addStage");
@@ -25,6 +26,8 @@ window.onload = function () {
     let name = document.getElementById('stage_name').value;
     if(name == ''){
       alert('Error: You must enter a stage name!');
+    } else if(!isUniqueStageName(name)) {
+      alert('Error: You must enter a unique stage name!');
     } else {
       KanbanTest.addBoards([
         {
@@ -40,72 +43,35 @@ window.onload = function () {
       });
 
       updateYamlFromBoard();
+      document.getElementById('stage_name').value = '';
     }
   });
-  
 
-  window.renderJSON = ()=>{
-    const obj = document.getElementById("myKanban");
-    let boards = []
-    obj.querySelectorAll('.kanban-board').forEach(el => {
-        let items = []
-        el.querySelectorAll('.kanban-item').forEach(i => {
-            items.push({
-                id: i.getAttribute('data-eid'),
-            })
-        })
-        boards.push({
-            id: el.getAttribute('data-id'),
-            title: el.getAttribute('data-id'),
-            items,
-        })
-    })
-    return boards
-  }
-  window.updateYamlFromBoard = function(){
-    var str = document.getElementById("source").value;
-    let obj = jsYaml.load(str, { schema: jsYaml.DEFAULT_SCHEMA });
-    let newPipelineStages = [];
-    let newStageWorkflowsObjs = {};
-    let boards = renderJSON();
-    boards.forEach((board)=>{
-      let newStageWorkflows = [];
-      board.items.forEach((wf)=>{
-        let workflowObj = {};
-        workflowObj[wf.id] = {};
-        newStageWorkflows.push(workflowObj);
-      });
-      let stageObj = {};
-      stageObj[board.id] = {};
-      newPipelineStages.push(stageObj);
-      newStageWorkflowsObjs[board.id] = {
-        workflows: newStageWorkflows
-      };
-    })
-
-    obj.pipelines[selectedPipeline].stages = newPipelineStages;
-    obj.stages = {
-      ...obj.stages, 
-      ...newStageWorkflowsObjs
-    };
-    let yaml = jsYaml.dump(obj);
-    document.getElementById("source").value = yaml;
-  }
+  var addPipelineElm = document.getElementById("addPipeline");
+  addPipelineElm.addEventListener("click", function() {
+    let name = document.getElementById('pipeline_name').value;
+    if(name == ''){
+      alert('Error: You must enter a pipeline name!');
+    } else if(!isUniquePipelineName(name)) {
+      alert('Error: You must enter a unique pipeline name!');
+    } else {
+      selectedPipeline = name;
+      removeAllBoards();
+      // let yaml = parseYaml();
+      // loadYaml(yaml);
+      updateYamlFromBoard(name);
+      loadYaml(parseYaml());
+      document.getElementById('pipeline_name').value = '';
+    }
+  });
 };
 
-function removeAllBoards(){
-  let boards = renderJSON();
-  boards.forEach((board)=>{
-    KanbanTest.removeBoard(board.id);
-  });
-}
-
 function loadYaml(yamlObj){
-    let pipeline_keys = Object.keys(yamlObj.pipelines);
+    let pipeline_keys = yamlObj.pipelines ? Object.keys(yamlObj.pipelines) : [];
     if(!selectedPipeline || pipeline_keys.indexOf(selectedPipeline) == -1){
       selectedPipeline = pipeline_keys[0];
     }
-    let stage_keys = Object.keys(yamlObj.stages);
+    let stage_keys = yamlObj.stages ? Object.keys(yamlObj.stages) : [];
 
     let selectHTML = '';
     pipeline_keys.forEach((pipeline)=>{
@@ -237,5 +203,175 @@ function createBoard(boards, yamlObj){
         enabled: true
     },
     boards: boards
+  });
+}
+
+/* Util Functions */
+
+function isUniquePipelineName(name){
+  let yaml = parseYaml();
+  if(!yaml.pipelines){
+    return true;
+  }
+  let isUnique = true;
+  Object.keys(yaml.pipelines).forEach((board)=>{
+    if(name == board){
+      isUnique = false;
+    }
+  });
+  return isUnique;
+}
+
+function isUniqueStageName(name){
+  let yaml = parseYaml();
+  if(!yaml.stages){
+    return true;
+  }
+  let isUnique = true;
+  Object.keys(yaml.stages).forEach((stage)=>{
+    if(name == stage){
+      isUnique = false;
+    }
+  });
+  return isUnique;
+}
+
+function renderJSON(){
+  const obj = document.getElementById("myKanban");
+  let boards = []
+  obj.querySelectorAll('.kanban-board').forEach(el => {
+      let items = []
+      el.querySelectorAll('.kanban-item').forEach(i => {
+          items.push({
+              id: i.getAttribute('data-eid'),
+          })
+      })
+      boards.push({
+          id: el.getAttribute('data-id'),
+          title: el.getAttribute('data-id'),
+          items,
+      })
+  })
+  return boards
+}
+
+function updateYamlFromBoard(newPipeline){
+  var originalYaml = document.getElementById("source").value;
+  let obj = jsYaml.load(originalYaml, { schema: jsYaml.DEFAULT_SCHEMA });
+  let newPipelineStages = [];
+  let newStageWorkflowsObjs = {};
+  let boards = renderJSON();
+  boards.forEach((board)=>{
+    let newStageWorkflows = [];
+    board.items.forEach((wf)=>{
+      let workflowObj = {};
+      workflowObj[wf.id] = {};
+      newStageWorkflows.push(workflowObj);
+    });
+    let stageObj = {};
+    stageObj[board.id] = {};
+    newPipelineStages.push(stageObj);
+    newStageWorkflowsObjs[board.id] = {
+      workflows: newStageWorkflows
+    };
+  })
+  if(newPipeline){
+    if(!obj.pipelines){
+      obj.pipelines = {};
+    }
+    obj.pipelines[newPipeline] = {stages: []}
+  }
+  obj.pipelines[selectedPipeline].stages = newPipelineStages;
+  obj.stages = {
+    ...obj.stages, 
+    ...newStageWorkflowsObjs
+  };
+  let yaml = jsYaml.dump(obj);
+  let newYaml = replacePipelinesAndStages(originalYaml, yaml);
+  document.getElementById("source").value = newYaml;
+}
+
+function replacePipelinesAndStages(originalYaml, newYaml){
+  let projectTypeStr = 'project_type:';
+  let pipelineStr = 'pipelines:';
+  let stageStr = 'stages:';
+  let parsingPipelines = false;
+  let parsingStages = false;
+  let pipelinesLines = '';
+  let stagesLines = '';
+  newYaml.split('\n').forEach((line)=>{
+    // New section detected
+    if(line.indexOf(' ') != 0) {
+      parsingPipelines = false;
+      parsingStages = false;
+    }
+    if(line.indexOf(pipelineStr) == 0) {
+      parsingPipelines = true;
+    }
+    if(line.indexOf(stageStr) == 0) {
+      parsingStages = true;
+    }
+    if(parsingPipelines) {
+      pipelinesLines += line + '\n';
+    }
+    if(parsingStages) {
+      stagesLines += line + '\n';
+    }
+  });
+  // Fix indent issue
+  pipelinesLines = pipelinesLines.replace(/      +/g, '    ');
+  stagesLines = stagesLines.replace(/      +/g, '    ');
+
+  console.log('pipelinesLines:', pipelinesLines);
+  console.log('stagesLines:', stagesLines);
+
+  let mergedLines = [];
+  originalYaml.split('\n').forEach((line)=>{
+    // New section detected
+    if(line.indexOf(' ') != 0) {
+      parsingPipelines = false;
+      parsingStages = false;
+    }
+    if(line.indexOf(pipelineStr) == 0) {
+      parsingPipelines = true;
+      mergedLines.push(line);
+    }
+    if(line.indexOf(stageStr) == 0) {
+      parsingStages = true;
+      mergedLines.push(line);
+    }
+    if(!parsingPipelines && !parsingStages) {
+      mergedLines.push(line);
+    }
+  });
+
+  let mergedYaml = '';
+  mergedLines.forEach((line, index)=>{
+    if(originalYaml.indexOf(pipelineStr) != -1 && originalYaml.indexOf(stageStr) != -1){
+      if(line.indexOf(pipelineStr) == 0 ){
+        mergedYaml += pipelinesLines;
+      } else if(line.indexOf(stageStr) == 0) {
+        mergedYaml += stagesLines;
+      } else {
+        mergedYaml += line + (index != mergedLines.length-1 ? '\n' : '');
+      }
+    } else {
+      if(line.indexOf(projectTypeStr) == 0 ){
+        mergedYaml += line + '\n';
+        mergedYaml += pipelinesLines;
+        mergedYaml += stagesLines;
+      } else {
+        mergedYaml += line + (index != mergedLines.length-1 ? '\n' : '');
+      }
+    }
+  });
+
+  return mergedYaml;
+}
+
+function removeAllBoards(){
+  let boards = renderJSON();
+  boards.forEach((board)=>{
+    KanbanTest.removeBoard(board.id);
   });
 }

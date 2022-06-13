@@ -17,34 +17,34 @@ project_type: ios
 pipelines:
   pipeline_1:
     stages:
-      - build: {}
-      - test: {}
-      - deploy: {}
+    - build: {}
+    - test: {}
+    - deploy: {}
   pipeline_2:
     stages:
-      - build: {}
-      - test: {}
+    - build: {}
+    - test: {}
   pipeline_3:
     stages:
-      - build_parallel: {}
+    - build_parallel: {}
 stages:
   build:
     workflows:
-      - build: {}
+    - build: {}
   test:
     workflows:
-      - tests_1: {}
-      - tests_2: {}
-      - tests_3: {}
-      - tests_4: {}
-      - tests_5: {}
+    - tests_1: {}
+    - tests_2: {}
+    - tests_3: {}
+    - tests_4: {}
+    - tests_5: {}
   deploy:
     workflows:
-      - deploy: {}
+    - deploy: {}
   build_parallel:
     workflows:
-      - ios: {}
-      - android: {}
+    - ios: {}
+    - android: {}
 workflows:
   build:
     steps:
@@ -98,6 +98,10 @@ workflows:
         <span class="top-controls">
           <label for="pipelines">Pipeline:</label>
           <select id="pipelines" name="pipelines"></select>
+        </span>
+        <span class="controls">
+          <button id="addPipeline">Add Pipeline</button>
+          <input type="text" id="pipeline_name">
         </span>
         <span class="controls">
           <button id="addStage">Add Stage</button>
