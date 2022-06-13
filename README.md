@@ -4,8 +4,6 @@
 
 [Live Demo](https://damienbitrise.github.io/Pipeline-UI/)
 
-![](https://github.com/DamienBitrise/Pipeline-UI/raw/main/images/demo.gif)
-
 ## Features
 
 - Two way Sync between YAML and Visual Editor
