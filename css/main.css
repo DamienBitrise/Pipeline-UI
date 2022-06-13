@@ -1,0 +1,76 @@
+body {
+    font-family: "Helvetica";
+    margin: 0;
+    padding: 0;
+}
+
+#myKanban {
+    overflow-x: auto;
+}
+
+.kanban-container {
+    margin: 20px;
+}
+
+.success {
+    background: #00b961;
+}
+
+.info {
+    background: #2a92bf;
+}
+
+.warning {
+    background: #f4ce46;
+}
+
+.error {
+    background: #fb7d44;
+}
+
+.custom-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 7px 15px;
+    margin: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+} 
+
+#myKanban{
+    width: 50% !important;
+    height: 100%;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+}
+#yaml{
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+#source{
+    width: 100%;
+    height: 100%;
+    display: block !important;
+}
+
+select{
+    width: 100%;
+}
+
+.controls{
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1;
+}
+
+.delete{
+    float: right;
+}
