@@ -2,4 +2,4 @@
 
 ## Demo
 
-![](https://github.com/DamienBitrise/Pipeline-UI/images/demo.gif)
+![](https://github.com/DamienBitrise/Pipeline-UI/raw/main/images/demo.gif)
