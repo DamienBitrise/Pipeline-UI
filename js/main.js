@@ -1,5 +1,6 @@
 let KanbanTest = null;
 let selectedPipeline = null;
+let workflowCount = 0;
 window.onload = function () {
   default_text = document.getElementById('source').value || '';
 
@@ -88,9 +89,10 @@ function loadYaml(yamlObj){
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             let board_stages = [];
             pipeline_stage_workflows_keys.forEach((workflow)=>{
+              let workflow_id = workflow+'_'+workflowCount++
                 board_stages.push({
-                    id: workflow,
-                    title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')"></div>',
+                    id: workflow_id,
+                    title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
                     drag: function(el, source) {
                         console.log("START DRAG: " + el.dataset.eid);
                     },
@@ -145,9 +147,10 @@ function addWorkflow(boardId, selectHTML){
   formItem.addEventListener("submit", function(e) {
     e.preventDefault();
     var workflow = e.target[0].value;
+    let workflow_id = workflow+'_'+workflowCount++
     KanbanTest.addElement(boardId, {
-      id: workflow,
-      title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow+'\')"></div>',
+      id: workflow_id,
+      title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
     });
     formItem.parentNode.removeChild(formItem);
     updateYamlFromBoard();
@@ -240,8 +243,9 @@ function renderJSON(){
   obj.querySelectorAll('.kanban-board').forEach(el => {
       let items = []
       el.querySelectorAll('.kanban-item').forEach(i => {
+        let id = i.getAttribute('data-eid');
           items.push({
-              id: i.getAttribute('data-eid'),
+              id: id.substring(0, id.lastIndexOf('_')),
           })
       })
       boards.push({
