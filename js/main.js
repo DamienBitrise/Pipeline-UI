@@ -284,11 +284,28 @@ function updateYamlFromBoard(newPipeline){
     ...obj.stages, 
     ...newStageWorkflowsObjs
   };
+  checkForErrors(obj);
   let yaml = jsYaml.dump(obj);
   let newYaml = replacePipelinesAndStages(originalYaml, yaml);
   document.getElementById("source").value = newYaml;
 }
 
+function checkForErrors(obj){
+  let errors = '';
+  Object.keys(obj.pipelines).forEach((pipeline)=>{
+    // Validate Pipelines have at least 1 stage
+    if(obj.pipelines[pipeline].stages.length == 0){
+      errors += 'Error: Pipeline "' + pipeline + '" does not have any stages!<br>';
+    }
+  });
+  // Validate Stages have at least 1 workflow
+  Object.keys(obj.stages).forEach((stage)=>{
+    if(Object.keys(obj.stages[stage].workflows).length == 0){
+      errors += 'Error: Stage "' + stage + '" does not have any workflows!<br>';
+    }
+  });
+  document.getElementById('errors').innerHTML = errors;
+}
 function replacePipelinesAndStages(originalYaml, newYaml){
   let projectTypeStr = 'project_type:';
   let pipelineStr = 'pipelines:';
