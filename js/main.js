@@ -24,15 +24,29 @@ window.onload = function () {
 
   var addStageElm = document.getElementById("addStage");
   addStageElm.addEventListener("click", function() {
-    let name = document.getElementById('stage_name').value;
-    if(name == ''){
+    let stage = document.getElementById('stage_name').value;
+    if(stage == ''){
       alert('Error: You must enter a stage name!');
-    } else {
+    } else if(!isUniqueStageNameForBoard(stage)) {
+      alert('Error: Stage "'+stage+'" already exists in this Pipeline!');
+    }  else {
+      let yamlObj = parseYaml();
+      let items = [];
+      if(yamlObj.stages[stage]){
+        yamlObj.stages[stage].workflows.forEach((workflowObj, index)=>{
+          let workflow = Object.keys(workflowObj)[0];
+          let workflow_id = workflow + '_' + stage + '_' + index;
+          items.push({
+            id: workflow_id,
+            title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>'
+          });
+        });
+      }
       KanbanTest.addBoards([
         {
-          id: name,
-          title: name + '<input id="delete_'+name+'" class="delete" type="button" value="X" onclick="deleteStage(\''+name+'\')">',
-          item: [],
+          id: stage,
+          title: stage + '<input id="delete_'+stage+'" class="delete" type="button" value="X" onclick="deleteStage(\''+stage+'\')">',
+          item: items,
           class: "white"
         }
       ]);
@@ -88,8 +102,8 @@ function loadYaml(yamlObj){
             let pipeline_stage_workflows = stageObj.workflows;
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             let board_stages = [];
-            pipeline_stage_workflows_keys.forEach((workflow)=>{
-              let workflow_id = workflow+'_'+workflowCount++
+            pipeline_stage_workflows_keys.forEach((workflow, index)=>{
+              let workflow_id = workflow + '_' + stage + '_' + index;
                 board_stages.push({
                     id: workflow_id,
                     title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
@@ -144,10 +158,16 @@ function addWorkflow(boardId, selectHTML){
     </div>`;
 
   KanbanTest.addForm(boardId, formItem);
+
   formItem.addEventListener("submit", function(e) {
     e.preventDefault();
+    let yamlObj = parseYaml();
+    let workflowCount = 0;
+    if(yamlObj.stages[boardId]){
+      workflowCount = yamlObj.stages[boardId].workflows.length;
+    }
     var workflow = e.target[0].value;
-    let workflow_id = workflow+'_'+workflowCount++
+    let workflow_id = workflow + '_' + boardId + '_' + workflowCount;
     KanbanTest.addElement(boardId, {
       id: workflow_id,
       title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
@@ -223,17 +243,16 @@ function isUniquePipelineName(name){
   return isUnique;
 }
 
-function isUniqueStageName(name){
+function isUniqueStageNameForBoard(name){
   let yaml = parseYaml();
-  if(!yaml.stages){
+  if(!yaml.pipelines[selectedPipeline] || !yaml.pipelines[selectedPipeline].stages){
     return true;
   }
   let isUnique = true;
-  Object.keys(yaml.stages).forEach((stage)=>{
-    if(name == stage){
+  let stages = yaml.pipelines[selectedPipeline].stages.map((stage)=>Object.keys(stage)[0]);
+  if(stages.indexOf(name) != -1){
       isUnique = false;
-    }
-  });
+  }
   return isUnique;
 }
 
@@ -244,8 +263,10 @@ function renderJSON(){
       let items = []
       el.querySelectorAll('.kanban-item').forEach(i => {
         let id = i.getAttribute('data-eid');
+        let newId = id.substring(0, id.lastIndexOf('_'));
+        newId = newId.substring(0, newId.lastIndexOf('_'));
           items.push({
-              id: id.substring(0, id.lastIndexOf('_')),
+              id: newId,
           })
       })
       boards.push({
