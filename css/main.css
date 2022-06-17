@@ -293,16 +293,12 @@ label {
 
 .flex-container {
     display: flex;
-    height: 100%;
+    height: calc(100% - 74px);
 }
 
 .flex-child {
     flex: 1;
 }  
-
-.flex-child:first-child {
-    
-} 
 
 .header{
     background-color: rgb(236, 236, 236);
@@ -318,6 +314,7 @@ label {
     padding-left: 16px;
     padding-right: 16px;
     padding-top: 12px;
+    height: 74px;
 }
 
 .header-right{
