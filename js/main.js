@@ -40,7 +40,7 @@ window.onload = function () {
       if(yamlObj.stages[stage]){
         yamlObj.stages[stage].workflows.forEach((workflowObj, index)=>{
           let workflow = Object.keys(workflowObj)[0];
-          let workflow_id = workflow + '_' + stage + '_' + index;
+          let workflow_id = workflow + '|' + stage + '_' + index;
           items.push({
             id: workflow_id,
             title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>'
@@ -106,7 +106,7 @@ function loadYaml(yamlObj){
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             let board_stages = [];
             pipeline_stage_workflows_keys.forEach((workflow, index)=>{
-              let workflow_id = workflow + '_' + stage + '_' + index;
+              let workflow_id = workflow + '|' + stage + '_' + index;
                 board_stages.push({
                     id: workflow_id,
                     title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
@@ -170,7 +170,7 @@ function addWorkflow(boardId, selectHTML){
       workflowCount = yamlObj.stages[boardId].workflows.length;
     }
     var workflow = e.target[0].value;
-    let workflow_id = workflow + '_' + boardId + '_' + workflowCount;
+    let workflow_id = workflow + '|' + boardId + '_' + workflowCount;
     KanbanTest.addElement(boardId, {
       id: workflow_id,
       title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
@@ -266,8 +266,7 @@ function renderJSON(){
       let items = []
       el.querySelectorAll('.kanban-item').forEach(i => {
         let id = i.getAttribute('data-eid');
-        let newId = id.substring(0, id.lastIndexOf('_'));
-        newId = newId.substring(0, newId.lastIndexOf('_'));
+        let newId = id.substring(0, id.indexOf('|'));
           items.push({
               id: newId,
           })
