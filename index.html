@@ -6,114 +6,57 @@
     <title>Pipeline Viewer</title>
     <link rel="stylesheet" href="./libs/jkanban/jkanban.min.css" />
     <link rel="stylesheet" href="./css/main.css">
-    <style>     
-    </style>
+    <link
+      rel="stylesheet"
+      data-name="vs/editor/editor.main"
+      href="./libs/monaco-editor/min/vs/editor/editor.main.css"
+    />
   </head>
   <body>
-    <div id="yaml">
-      <textarea id="source">format_version: '8'
-default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
-project_type: ios
-pipelines:
-  pipeline_1:
-    stages:
-    - build: {}
-    - test: {}
-    - deploy: {}
-  pipeline_2:
-    stages:
-    - build: {}
-    - test: {}
-  pipeline_3:
-    stages:
-    - build_parallel: {}
-stages:
-  build:
-    workflows:
-    - build: {}
-  test:
-    workflows:
-    - tests_1: {}
-    - tests_2: {}
-    - tests_3: {}
-    - tests_4: {}
-    - tests_5: {}
-  deploy:
-    workflows:
-    - deploy: {}
-  build_parallel:
-    workflows:
-    - ios: {}
-    - android: {}
-workflows:
-  build:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_1:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_2:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_3:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_4:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_5:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  deploy:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  ios:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  android:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  </textarea>
-  </div>
-    <div id="myKanban">
-      <div class="controls-container">
-        <span class="top-controls">
-          <label for="pipelines">Pipeline:</label>
-          <select id="pipelines" name="pipelines"></select>
-        </span>
-        <span class="controls">
-          <button id="addPipeline">Add Pipeline</button>
-          <input type="text" id="pipeline_name">
-        </span>
-        <span class="controls">
-          <button id="addStage">Add Stage</button>
-          <input type="text" id="stage_name">
-        </span>
-        <div>
-          <span id="errors"></span>
+    <div class="page">
+      <div class="header">
+        <div class="header-info">
+           <div class="bitriseLabel block bitriseFont">bitrise.yml editor</div>
+           <div class="bitriseLabel block bitriseFontSmall">You can edit your current config in YAML format:</div>
+        </div>
+        <div class="header-right">
+           <button class="bitriseButton bitriseButtonWide" id="download">Download bitrise.yml</button>
+        </div>
+        <div class="spacer" style="clear: both;"></div>
+     </div>
+      <div class="flex-container">
+        <div id="yaml" class="flex-child">
+          <div id="container" style="width: 100%; height: 100%; border: 1px solid grey"></div>
+        </div>
+        <div id="myKanban" class="flex-child">
+          <div class="controls-container">
+            <span class="top-controls">
+              <label class="bitriseLabel" for="pipelines">Pipeline:</label>
+              <select class="bitriseSelect" id="pipelines" name="pipelines"></select>
+            </span>
+            <span class="controls">
+              <button class="bitriseButton" id="addPipeline">Add Pipeline</button>
+              <input class="bitriseInput" type="text" id="pipeline_name">
+            </span>
+            <span class="controls">
+              <button class="bitriseButton" id="addStage">Add Stage</button>
+              <input class="bitriseInput" type="text" id="stage_name">
+            </span>
+            <div>
+              <span id="errors"></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <script src="./libs/jkanban/jkanban.js"></script>
     <script src="./libs/js-yaml/js-yaml.js"></script>
+    <script>
+      var require = { paths: { vs: './libs/monaco-editor/min/vs' } };
+    </script>
+    <script src="./libs/monaco-editor/min/vs/loader.js"></script>
+    <script src="./libs/monaco-editor/min/vs/editor/editor.main.nls.js"></script>
+    <script src="./libs/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="./js/main.js"></script>
   </body>
 </html>

@@ -2,13 +2,13 @@ let KanbanTest = null;
 let selectedPipeline = null;
 let workflowCount = 0;
 window.onload = function () {
-  default_text = document.getElementById('source').value || '';
+  loadEditor();
+  default_text = editor.getValue();
 
   // Parse the YAML in the text editor
   loadYaml(parseYaml());
 
-  var sourceElm = document.getElementById("source");
-  sourceElm.addEventListener("input", function() {
+  editor.getModel().onDidChangeContent((event) => {
     removeAllBoards();
     
     loadYaml(parseYaml());
@@ -20,6 +20,11 @@ window.onload = function () {
     selectedPipeline = this.value;
     removeAllBoards();
     loadYaml(parseYaml());
+  });
+
+  var downloadElm = document.getElementById("download");
+  downloadElm.addEventListener("click", function() {
+    download();
   });
 
   var addStageElm = document.getElementById("addStage");
@@ -70,8 +75,6 @@ window.onload = function () {
     } else {
       selectedPipeline = name;
       removeAllBoards();
-      // let yaml = parseYaml();
-      // loadYaml(yaml);
       updateYamlFromBoard(name);
       loadYaml(parseYaml());
       document.getElementById('pipeline_name').value = '';
@@ -279,7 +282,7 @@ function renderJSON(){
 }
 
 function updateYamlFromBoard(newPipeline){
-  var originalYaml = document.getElementById("source").value;
+  var originalYaml = editor.getValue();
   let obj = jsYaml.load(originalYaml, { schema: jsYaml.DEFAULT_SCHEMA });
   let newPipelineStages = [];
   let newStageWorkflowsObjs = {};
@@ -312,7 +315,7 @@ function updateYamlFromBoard(newPipeline){
   checkForErrors(obj);
   let yaml = jsYaml.dump(obj);
   let newYaml = replacePipelinesAndStages(originalYaml, yaml);
-  document.getElementById("source").value = newYaml;
+  editor.getModel().setValue(newYaml);
 }
 
 function checkForErrors(obj){
@@ -414,4 +417,137 @@ function removeAllBoards(){
   boards.forEach((board)=>{
     KanbanTest.removeBoard(board.id);
   });
+}
+
+// Hack to make this global
+window.parseYaml = () => {
+  var str, obj;
+
+  str = editor.getValue();
+
+  try {
+    obj = jsYaml.load(str, { schema: jsYaml.DEFAULT_SCHEMA });
+  } catch (err) {
+    console.log(err);
+  }
+  return obj;
+}
+
+function download() {
+  let text = editor.getValue();
+  let fileName = 'bitrise.yml';
+  const blob = new Blob([text], { type: "text/plain" });
+  const downloadLink = document.createElement("a");
+  downloadLink.download = fileName;
+  downloadLink.innerHTML = "Download File";
+  if (window.webkitURL) {
+      // No need to add the download element to the DOM in Webkit.
+      downloadLink.href = window.webkitURL.createObjectURL(blob);
+  } else {
+      downloadLink.href = window.URL.createObjectURL(blob);
+      downloadLink.onclick = (event) => {
+          if (event.target) {
+              document.body.removeChild(event.target);
+          }
+      };
+      downloadLink.style.display = "none";
+      document.body.appendChild(downloadLink);
+  }
+
+  downloadLink.click();
+
+  if (window.webkitURL) {
+      window.webkitURL.revokeObjectURL(downloadLink.href);
+  } else {
+      window.URL.revokeObjectURL(downloadLink.href);
+  }
+};
+
+function loadEditor(){
+  window.editor = monaco.editor.create(document.getElementById('container'), {
+        value: [`format_version: '8'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: ios
+pipelines:
+  pipeline_1:
+    stages:
+    - build: {}
+    - test: {}
+    - deploy: {}
+  pipeline_2:
+    stages:
+    - build: {}
+    - test: {}
+  pipeline_3:
+    stages:
+    - build_parallel: {}
+stages:
+  build:
+    workflows:
+    - build: {}
+  test:
+    workflows:
+    - tests_1: {}
+    - tests_2: {}
+    - tests_3: {}
+    - tests_4: {}
+    - tests_5: {}
+  deploy:
+    workflows:
+    - deploy: {}
+  build_parallel:
+    workflows:
+    - ios: {}
+    - android: {}
+workflows:
+  build:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  tests_1:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  tests_2:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  tests_3:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  tests_4:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  tests_5:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  deploy:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  ios:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+  android:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6: {}
+`].join('\n'),
+        language: 'yaml',
+        automaticLayout: true
+      });
+      monaco.editor.setTheme('vs-dark');
 }
