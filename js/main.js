@@ -1,6 +1,8 @@
 let KanbanTest = null;
 let selectedPipeline = null;
 let workflowCount = 0;
+let currentWorkflowKeys = null;
+let modal = null;
 window.onload = function () {
   loadEditor();
   default_text = editor.getValue();
@@ -8,82 +10,40 @@ window.onload = function () {
   // Parse the YAML in the text editor
   loadYaml(parseYaml());
 
-  editor.getModel().onDidChangeContent((event) => {
-    removeAllBoards();
-    
-    loadYaml(parseYaml());
-  });
-
-  var pipelinesElm = document.getElementById("pipelines");
-  pipelinesElm.addEventListener("change", function() {
-    updateYamlFromBoard();
-    selectedPipeline = this.value;
-    removeAllBoards();
-    loadYaml(parseYaml());
-  });
-
-  var downloadElm = document.getElementById("download");
-  downloadElm.addEventListener("click", function() {
-    download();
-  });
-
-  var addStageElm = document.getElementById("addStage");
-  addStageElm.addEventListener("click", function() {
-    let stage = document.getElementById('stage_name').value;
-    if(stage == ''){
-      alert('Error: You must enter a stage name!');
-    } else if(!isUniqueStageNameForBoard(stage)) {
-      alert('Error: Stage "'+stage+'" already exists in this Pipeline!');
-    }  else {
-      let yamlObj = parseYaml();
-      let items = [];
-      if(yamlObj.stages[stage]){
-        yamlObj.stages[stage].workflows.forEach((workflowObj, index)=>{
-          let workflow = Object.keys(workflowObj)[0];
-          let workflow_id = workflow + '|' + stage + '_' + index;
-          items.push({
-            id: workflow_id,
-            title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>'
-          });
-        });
-      }
-      KanbanTest.addBoards([
-        {
-          id: stage,
-          title: stage + '<input id="delete_'+stage+'" class="delete" type="button" value="X" onclick="deleteStage(\''+stage+'\')">',
-          item: items,
-          class: "white"
-        }
-      ]);
-      let boardObj = renderJSON();
-      KanbanTest.options.boards.forEach((board)=>{
-          board.dragTo = boardObj.map((board)=>board.id)
-      });
-
-      updateYamlFromBoard();
-      document.getElementById('stage_name').value = '';
-    }
-  });
-
-  var addPipelineElm = document.getElementById("addPipeline");
-  addPipelineElm.addEventListener("click", function() {
-    let name = document.getElementById('pipeline_name').value;
-    if(name == ''){
-      alert('Error: You must enter a pipeline name!');
-    } else if(!isUniquePipelineName(name)) {
-      alert('Error: You must enter a unique pipeline name!');
-    } else {
-      selectedPipeline = name;
-      removeAllBoards();
-      updateYamlFromBoard(name);
-      loadYaml(parseYaml());
-      document.getElementById('pipeline_name').value = '';
-    }
-  });
+  addEventListeners();
 };
 
 function loadYaml(yamlObj){
+    if(yamlObj.message){
+      new Modal({
+        el: document.getElementById('static-modal'),
+        title: 'Error: '+yamlObj.reason,
+        content: yamlObj.message.split('\n').join('<br>')
+      }).show();
+      document.getElementById('errors').innerHTML = 'Fix YAML Errors to load UI:<br><br>' + yamlObj.message.split('\n').join('<br>');
+      return;
+    } else {
+      document.getElementById('errors').innerHTML = '';
+    }
     let pipeline_keys = yamlObj.pipelines ? Object.keys(yamlObj.pipelines) : [];
+    let workflow_keys = yamlObj.workflows ? Object.keys(yamlObj.workflows) : [];
+    let newWorkflows = [];
+    let removedWorkflows = [];
+    if(!currentWorkflowKeys){
+      currentWorkflowKeys = workflow_keys;
+    } else if (!arraysEqual(currentWorkflowKeys, workflow_keys)){
+      currentWorkflowKeys.forEach((workflow)=>{
+        if(workflow_keys.indexOf(workflow) == -1){
+          newWorkflows.push(workflow);
+        }
+      });
+      workflow_keys.forEach((workflow)=>{
+        if(currentWorkflowKeys.indexOf(workflow) == -1){
+          removedWorkflows.push(workflow);
+        }
+      });
+    }
+
     if(!selectedPipeline || pipeline_keys.indexOf(selectedPipeline) == -1){
       selectedPipeline = pipeline_keys[0];
     }
@@ -100,10 +60,21 @@ function loadYaml(yamlObj){
       let pipeline = yamlObj.pipelines[pipelineKey];
       if(selectedPipeline == pipelineKey){
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
+        console.log('pipeline_stage_keys:', pipeline_stage_keys);
         pipeline_stage_keys.forEach((stage)=>{
             let stageObj = yamlObj.stages[stage];
+            if(!stageObj){
+              debugger;
+            }
             let pipeline_stage_workflows = stageObj.workflows;
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
+            // Update any workflows that have been renamed
+            pipeline_stage_workflows_keys.forEach((workflow, i)=>{
+              let index = newWorkflows.indexOf(workflow);
+              if(index != -1){
+                pipeline_stage_workflows_keys[i] = removedWorkflows[index];
+              }
+            })
             let board_stages = [];
             pipeline_stage_workflows_keys.forEach((workflow, index)=>{
               let workflow_id = workflow + '|' + stage + '_' + index;
@@ -230,34 +201,7 @@ function createBoard(boards, yamlObj){
   });
 }
 
-/* Util Functions */
-
-function isUniquePipelineName(name){
-  let yaml = parseYaml();
-  if(!yaml.pipelines){
-    return true;
-  }
-  let isUnique = true;
-  Object.keys(yaml.pipelines).forEach((board)=>{
-    if(name == board){
-      isUnique = false;
-    }
-  });
-  return isUnique;
-}
-
-function isUniqueStageNameForBoard(name){
-  let yaml = parseYaml();
-  if(!yaml.pipelines[selectedPipeline] || !yaml.pipelines[selectedPipeline].stages){
-    return true;
-  }
-  let isUnique = true;
-  let stages = yaml.pipelines[selectedPipeline].stages.map((stage)=>Object.keys(stage)[0]);
-  if(stages.indexOf(name) != -1){
-      isUnique = false;
-  }
-  return isUnique;
-}
+/* YAML Functions */
 
 function renderJSON(){
   const obj = document.getElementById("myKanban");
@@ -317,22 +261,6 @@ function updateYamlFromBoard(newPipeline){
   editor.getModel().setValue(newYaml);
 }
 
-function checkForErrors(obj){
-  let errors = '';
-  Object.keys(obj.pipelines).forEach((pipeline)=>{
-    // Validate Pipelines have at least 1 stage
-    if(obj.pipelines[pipeline].stages.length == 0){
-      errors += 'Error: Pipeline "' + pipeline + '" does not have any stages!<br>';
-    }
-  });
-  // Validate Stages have at least 1 workflow
-  Object.keys(obj.stages).forEach((stage)=>{
-    if(Object.keys(obj.stages[stage].workflows).length == 0){
-      errors += 'Error: Stage "' + stage + '" does not have any workflows!<br>';
-    }
-  });
-  document.getElementById('errors').innerHTML = errors;
-}
 function replacePipelinesAndStages(originalYaml, newYaml){
   let projectTypeStr = 'project_type:';
   let pipelineStr = 'pipelines:';
@@ -418,8 +346,7 @@ function removeAllBoards(){
   });
 }
 
-// Hack to make this global
-window.parseYaml = () => {
+function parseYaml() {
   var str, obj;
 
   str = editor.getValue();
@@ -428,125 +355,82 @@ window.parseYaml = () => {
     obj = jsYaml.load(str, { schema: jsYaml.DEFAULT_SCHEMA });
   } catch (err) {
     console.log(err);
+    return err;
   }
   return obj;
 }
 
-function download() {
-  let text = editor.getValue();
-  let fileName = 'bitrise.yml';
-  const blob = new Blob([text], { type: "text/plain" });
-  const downloadLink = document.createElement("a");
-  downloadLink.download = fileName;
-  downloadLink.innerHTML = "Download File";
-  if (window.webkitURL) {
-      // No need to add the download element to the DOM in Webkit.
-      downloadLink.href = window.webkitURL.createObjectURL(blob);
-  } else {
-      downloadLink.href = window.URL.createObjectURL(blob);
-      downloadLink.onclick = (event) => {
-          if (event.target) {
-              document.body.removeChild(event.target);
-          }
-      };
-      downloadLink.style.display = "none";
-      document.body.appendChild(downloadLink);
-  }
+function addEventListeners(){
+  editor.getModel().onDidChangeContent((event) => {
+    removeAllBoards();
+    
+    loadYaml(parseYaml());
+  });
 
-  downloadLink.click();
+  var pipelinesElm = document.getElementById("pipelines");
+  pipelinesElm.addEventListener("change", function() {
+    updateYamlFromBoard();
+    selectedPipeline = this.value;
+    removeAllBoards();
+    loadYaml(parseYaml());
+  });
 
-  if (window.webkitURL) {
-      window.webkitURL.revokeObjectURL(downloadLink.href);
-  } else {
-      window.URL.revokeObjectURL(downloadLink.href);
-  }
-};
+  var downloadElm = document.getElementById("download");
+  downloadElm.addEventListener("click", function() {
+    download();
+  });
 
-function loadEditor(){
-  window.editor = monaco.editor.create(document.getElementById('container'), {
-        value: [`format_version: '8'
-default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
-project_type: ios
-pipelines:
-  pipeline_1:
-    stages:
-    - build: {}
-    - test: {}
-    - deploy: {}
-  pipeline_2:
-    stages:
-    - build: {}
-    - test: {}
-  pipeline_3:
-    stages:
-    - build_parallel: {}
-stages:
-  build:
-    workflows:
-    - build: {}
-  test:
-    workflows:
-    - tests_1: {}
-    - tests_2: {}
-    - tests_3: {}
-    - tests_4: {}
-    - tests_5: {}
-  deploy:
-    workflows:
-    - deploy: {}
-  build_parallel:
-    workflows:
-    - ios: {}
-    - android: {}
-workflows:
-  build:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_1:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_2:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_3:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_4:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  tests_5:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  deploy:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  ios:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-  android:
-    steps:
-      - activate-ssh-key@4:
-          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-      - git-clone@6: {}
-`].join('\n'),
-        language: 'yaml',
-        automaticLayout: true
+  var addStageElm = document.getElementById("addStage");
+  addStageElm.addEventListener("click", function() {
+    let stage = document.getElementById('stage_name').value;
+    if(stage == ''){
+      alert('Error: You must enter a stage name!');
+    } else if(!isUniqueStageNameForBoard(stage)) {
+      alert('Error: Stage "'+stage+'" already exists in this Pipeline!');
+    }  else {
+      let yamlObj = parseYaml();
+      let items = [];
+      if(yamlObj.stages[stage]){
+        yamlObj.stages[stage].workflows.forEach((workflowObj, index)=>{
+          let workflow = Object.keys(workflowObj)[0];
+          let workflow_id = workflow + '|' + stage + '_' + index;
+          items.push({
+            id: workflow_id,
+            title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>'
+          });
+        });
+      }
+      KanbanTest.addBoards([
+        {
+          id: stage,
+          title: stage + '<input id="delete_'+stage+'" class="delete" type="button" value="X" onclick="deleteStage(\''+stage+'\')">',
+          item: items,
+          class: "white"
+        }
+      ]);
+      let boardObj = renderJSON();
+      KanbanTest.options.boards.forEach((board)=>{
+          board.dragTo = boardObj.map((board)=>board.id)
       });
-      monaco.editor.setTheme('vs-dark');
+
+      updateYamlFromBoard();
+      document.getElementById('stage_name').value = '';
+    }
+  });
+
+  var addPipelineElm = document.getElementById("addPipeline");
+  addPipelineElm.addEventListener("click", function() {
+    let name = document.getElementById('pipeline_name').value;
+    if(name == ''){
+      alert('Error: You must enter a pipeline name!');
+    } else if(!isUniquePipelineName(name)) {
+      alert('Error: You must enter a unique pipeline name!');
+    } else {
+      selectedPipeline = name;
+      removeAllBoards();
+      updateYamlFromBoard(name);
+      loadYaml(parseYaml());
+      document.getElementById('pipeline_name').value = '';
+    }
+  });
 }
