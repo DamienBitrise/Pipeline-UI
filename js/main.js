@@ -156,8 +156,8 @@ function addWorkflow(boardId, selectHTML){
         ${selectHTML}
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-primary btn-xs pull-right">Add</button>
-        <button type="button" id="CancelBtn" class="btn btn-default btn-xs pull-right">Cancel</button>
+        <button type="submit" class="bitriseButtonSmall">Add</button>
+        <button type="button" id="CancelBtn" class="bitriseButtonSmall">Cancel</button>
     </div>`;
 
   KanbanTest.addForm(boardId, formItem);
@@ -210,7 +210,7 @@ function createBoard(boards, yamlObj){
     buttonClick: function(el, boardId) {
       // TODO Fix this so it is updated from the YAML list of workflows
       let workflow_keys = Object.keys(yamlObj.workflows);
-      let selectHTML = '<select>';
+      let selectHTML = '<select class="bitriseSelect">';
       workflow_keys.forEach((workflow)=>{
           selectHTML += '<option value="'+workflow+'">'+workflow+'</option>';
       });

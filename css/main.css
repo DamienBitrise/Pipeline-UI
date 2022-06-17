@@ -50,6 +50,26 @@ body {
     transition: border-color .2s,opacity .2s,color .2s,background-color .2s;
 }
 
+.bitriseButtonSmall{
+    border-color: #683d87;
+    color: white;
+    background-image: linear-gradient(to top, #450674, #6c0eb2);
+    border-radius: 4px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: 1px solid;
+    padding: 2px 6px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: "TT Norms Pro", sans-serif;
+    -webkit-transition: border-color .2s,opacity .2s,color .2s,background-color .2s;
+    -moz-transition: border-color .2s,opacity .2s,color .2s,background-color .2s;
+    -o-transition: border-color .2s,opacity .2s,color .2s,background-color .2s;
+    transition: border-color .2s,opacity .2s,color .2s,background-color .2s;
+}
+
 .bitriseButtonWide{
     width: 200px;
     margin: 0px;
