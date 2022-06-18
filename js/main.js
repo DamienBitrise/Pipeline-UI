@@ -66,20 +66,24 @@ function loadYaml(yamlObj){
       let pipeline = yamlObj.pipelines[pipelineKey];
       if(selectedPipeline == pipelineKey){
         if(!pipeline.stages){
-          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!';
+          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!<br>';
           return;
         }
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
         pipeline_stage_keys.forEach((stage)=>{
             let stageObj = yamlObj.stages[stage];
             if(!stageObj){
-              document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!';
+              document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!<br>';
               return;
             }
             let pipeline_stage_workflows = stageObj.workflows;
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             // Update any workflows that have been renamed
             pipeline_stage_workflows_keys.forEach((workflow, i)=>{
+              if(workflow_keys.indexOf(workflow) == -1){
+                document.getElementById('errors').innerHTML += 'Workflow "'+workflow+'" in Stage "'+stage+'" in Pipeline "'+pipelineKey+'" Not Found!<br>';
+                return;
+              }
               let index = newWorkflows.indexOf(workflow);
               if(index != -1){
                 pipeline_stage_workflows_keys[i] = removedWorkflows[index];
@@ -108,16 +112,25 @@ function loadYaml(yamlObj){
         });
       } else {
         if(!pipeline.stages){
-          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!';
+          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!<br>';
           return;
         }
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
         pipeline_stage_keys.forEach((stage)=>{
           let stageObj = yamlObj.stages[stage];
           if(!stageObj){
-            document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!';
+            document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!<br>';
             return;
           }
+          let pipeline_stage_workflows = stageObj.workflows;
+          let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
+          // Check the workflows for errors
+          pipeline_stage_workflows_keys.forEach((workflow, i)=>{
+            if(workflow_keys.indexOf(workflow) == -1){
+              document.getElementById('errors').innerHTML += 'Workflow "'+workflow+'" in Stage "'+stage+'" in Pipeline "'+pipelineKey+'" Not Found!<br>';
+              return;
+            }
+          })
         });
       }
     })
