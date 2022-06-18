@@ -22,6 +22,12 @@ function loadYaml(yamlObj){
       }).show();
       document.getElementById('errors').innerHTML = 'Fix YAML Errors to load UI:<br><br>' + yamlObj.message.split('\n').join('<br>');
       return;
+    } else if(!yamlObj.pipelines) {
+      document.getElementById('errors').innerHTML = 'Fix YAML Errors to load UI:<br><br>No Pipelines Found!';
+      return;
+    } else if(!yamlObj.stages) {
+      document.getElementById('errors').innerHTML = 'Fix YAML Errors to load UI:<br><br>No Stages Found!';
+      return;
     } else {
       document.getElementById('errors').innerHTML = '';
     }
@@ -59,10 +65,17 @@ function loadYaml(yamlObj){
     pipeline_keys.forEach((pipelineKey)=>{
       let pipeline = yamlObj.pipelines[pipelineKey];
       if(selectedPipeline == pipelineKey){
+        if(!pipeline.stages){
+          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!';
+          return;
+        }
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
-        console.log('pipeline_stage_keys:', pipeline_stage_keys);
         pipeline_stage_keys.forEach((stage)=>{
-            let stageObj = yamlObj.stages ? yamlObj.stages[stage] : [];
+            let stageObj = yamlObj.stages[stage];
+            if(!stageObj){
+              document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!';
+              return;
+            }
             let pipeline_stage_workflows = stageObj.workflows;
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             // Update any workflows that have been renamed
@@ -78,14 +91,9 @@ function loadYaml(yamlObj){
                 board_stages.push({
                     id: workflow_id,
                     title: '<div class="workflow-title">'+workflow + '</div><div class="workflow-delete"><input id="delete_'+workflow_id+'" class="delete" type="button" value="X" onclick="deleteWorkflow(\''+workflow_id+'\')"></div>',
-                    drag: function(el, source) {
-                        console.log("START DRAG: " + el.dataset.eid);
-                    },
-                    dragend: function(el) {
-                        console.log("END DRAG: " + el.dataset.eid);
-                    },
+                    drag: function(el, source) {},
+                    dragend: function(el) {},
                     drop: function(el) {
-                        console.log("DROPPED: " + el.dataset.eid);
                         updateYamlFromBoard();
                     }
                 });
@@ -97,6 +105,19 @@ function loadYaml(yamlObj){
                 dragTo: stage_keys,
                 item: board_stages
             }); 
+        });
+      } else {
+        if(!pipeline.stages){
+          document.getElementById('errors').innerHTML += 'Invalid Pipeline "'+pipelineKey+'"!';
+          return;
+        }
+        let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
+        pipeline_stage_keys.forEach((stage)=>{
+          let stageObj = yamlObj.stages[stage];
+          if(!stageObj){
+            document.getElementById('errors').innerHTML += 'Stage "'+stage+'" Not Found!';
+            return;
+          }
         });
       }
     })
@@ -159,20 +180,12 @@ function createBoard(boards, yamlObj){
     itemHandleOptions:{
       enabled: true,
     },
-    click: function(el) {
-      console.log("Trigger on all items click!");
-    },
-    context: function(el, e) {
-      console.log("Trigger on all items right-click!");
-    },
+    click: function(el) {},
+    context: function(el, e) {},
     dropEl: function(el, target, source, sibling){
-      console.log(target.parentElement.getAttribute('data-id'));
-      console.log(el, target, source, sibling)
       updateYamlFromBoard();
     },
     dropBoard: function(el, target, source, sibling){
-        console.log(target.parentElement.getAttribute('data-id'));
-        console.log(el, target, source, sibling)
         updateYamlFromBoard();
       },
     buttonClick: function(el, boardId) {
@@ -288,9 +301,6 @@ function replacePipelinesAndStages(originalYaml, newYaml){
   // Fix indent issue
   pipelinesLines = pipelinesLines.replace(/      +/g, '    ');
   stagesLines = stagesLines.replace(/      +/g, '    ');
-
-  console.log('pipelinesLines:', pipelinesLines);
-  console.log('stagesLines:', stagesLines);
 
   let mergedLines = [];
   originalYaml.split('\n').forEach((line)=>{
