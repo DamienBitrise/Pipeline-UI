@@ -62,10 +62,7 @@ function loadYaml(yamlObj){
         let pipeline_stage_keys = pipeline.stages.map((stage)=>Object.keys(stage)[0]);
         console.log('pipeline_stage_keys:', pipeline_stage_keys);
         pipeline_stage_keys.forEach((stage)=>{
-            let stageObj = yamlObj.stages[stage];
-            if(!stageObj){
-              debugger;
-            }
+            let stageObj = yamlObj.stages ? yamlObj.stages[stage] : [];
             let pipeline_stage_workflows = stageObj.workflows;
             let pipeline_stage_workflows_keys = pipeline_stage_workflows.map((stage)=>Object.keys(stage)[0]);
             // Update any workflows that have been renamed
