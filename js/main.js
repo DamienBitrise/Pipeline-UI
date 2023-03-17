@@ -389,8 +389,8 @@ function addEventListeners(){
 
   var pipelinesElm = document.getElementById("pipelines");
   pipelinesElm.addEventListener("change", function() {
-    updateYamlFromBoard();
     selectedPipeline = this.value;
+    updateYamlFromBoard();
     removeAllBoards();
     loadYaml(parseYaml());
   });
