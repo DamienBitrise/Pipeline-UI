@@ -22,3 +22,4 @@
 
 - [jkanban](https://github.com/riktar/jkanban)
 - [js-yaml](https://github.com/nodeca/js-yaml)
+- new feature
